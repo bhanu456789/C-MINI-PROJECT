@@ -1,0 +1,50 @@
+// ***************************************************** 
+// * AUTOMATIC PLANT WATERING SYSTEM USING ARDUINO UNO * 
+// * LED GLOWS WHEN MOTOR IS ON                        * 
+// ***************************************************** 
+ 
+// --- Pin Definitions --- 
+const int sensorPin = A0;   // Analog input pin connected to the soil moisture sensor 
+const int motorPin  = 8;    // Digital output pin to control the motor (via transistor/relay) const int ledPin    = 7;    // Digital output pin to control the LED indicator 
+ 
+// --- Control Parameters --- int threshold = 600;        // Threshold value for moisture (adjust after testing) 
+int hysteresis = 50;        // Hysteresis range to prevent frequent ON/OFF switching bool pumpOn = false;        // Variable to store the pump (motor) state 
+ 
+// ------------------------------------------------------ 
+// setup() - This function runs once when the Arduino starts 
+// ------------------------------------------------------ void setup() {   pinMode(motorPin, OUTPUT);   // Set motor pin as OUTPUT   pinMode(ledPin, OUTPUT);     // Set LED pin as OUTPUT 
+ 
+  // Initially turn OFF both motor and LED   digitalWrite(motorPin, LOW);   digitalWrite(ledPin, LOW); 
+ 
+  // Start serial communication for debugging (to view readings) 
+  Serial.begin(9600); 
+  Serial.println("Automatic Plant Watering System Initialized"); 
+  Serial.println("LED glows when motor is ON"); 
+} 
+ 
+// ------------------------------------------------------ 
+// loop() - This function runs repeatedly after setup() // ------------------------------------------------------ void loop() {   long sum = 0;                // Variable to hold the sum of readings   const int samples = 10;      // Number of samples for averaging 
+ 
+  // --- Read multiple sensor values to get stable data ---   for (int i = 0; i < samples; i++) {     sum += analogRead(sensorPin);  // Read moisture value from A0     delay(5);                      // Short delay between samples 
+  } 
+ 
+  // --- Calculate the average moisture value ---   int moisture = sum / samples; 
+ 
+  // Print the moisture reading to Serial Monitor 
+  Serial.print("Moisture = "); 
+  Serial.println(moisture); 
+ 
+  // ------------------------------------------------------ 
+  // Control logic for motor and LED based on moisture value 
+  // ------------------------------------------------------ 
+ 
+  // Case 1: Soil is DRY → Turn ON motor and LED   if (!pumpOn && (moisture < threshold)) {     pumpOn = true;                   // Update pump status     digitalWrite(motorPin, HIGH);    // Turn ON the motor     digitalWrite(ledPin, HIGH);      // Turn ON the LED 
+    Serial.println("Motor ON - LED ON (Soil is dry, watering...)"); 
+  } 
+ 
+  // Case 2: Soil is WET → Turn OFF motor and LED   else if (pumpOn && (moisture > threshold + hysteresis)) {     pumpOn = false;                  // Update pump status     digitalWrite(motorPin, LOW);     // Turn OFF the motor     digitalWrite(ledPin, LOW);       // Turn OFF the LED 
+    Serial.println("Motor OFF - LED OFF (Soil is wet enough)"); 
+  } 
+ 
+  // --- Wait 1 second before next reading ---   delay(1000); 
+} 
